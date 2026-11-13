@@ -1,0 +1,16 @@
+.venv/
+venv/
+__pycache__/
+.pytest_cache/
+.ipynb_checkpoints/
+*.py[cod]
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+results/*
+!results/.gitkeep
+paper/figures/*
+!paper/figures/.gitkeep
+.DS_Store
+Thumbs.db
