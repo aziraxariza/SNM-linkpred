@@ -1,0 +1,15 @@
+{
+  "edge_url": "https://snap.stanford.edu/data/email-Eu-core.txt.gz",
+  "label_url": "https://snap.stanford.edu/data/email-Eu-core-department-labels.txt.gz",
+  "raw_dir": "data/raw",
+  "results_dir": "results",
+  "figures_dir": "paper/figures",
+  "repetitions": 10,
+  "test_fraction": 0.20,
+  "validation_fraction": 0.20,
+  "negative_ratio": 1,
+  "seeds": [13, 29, 47, 71, 101, 137, 173, 211, 257, 307],
+  "top_k": [10, 25, 50, 100],
+  "community_bonus_grid": [0.0, 0.1, 0.25, 0.5, 1.0, 2.0],
+  "louvain_resolution": 1.0
+}
