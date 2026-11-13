@@ -37,7 +37,7 @@ Run the chronological temporal experiment:
 python -m src.run_temporal
 ```
 
-The first run downloads the relevant SNAP files. Outputs are written to `results/`; figures are written to `paper/figures/`. Raw data and generated outputs are excluded from Git by default.
+The first run downloads the relevant SNAP files. Outputs are written to `results/`; figures are written to `paper/figures/`. Raw data and generated outputs are excluded from Git by default.\n\nTo run both experiments on GitHub, open **Actions → Full research experiments → Run workflow**. The manual workflow installs dependencies, runs tests, downloads both datasets, executes both experiments, and uploads the CSV tables and PNG figures as `snm-linkpred-experiment-results`.
 
 ## Evaluation design
 Static positives are split into train, validation and test sets. Negative candidates are absent from the complete observed static graph and sampled separately by department stratum. Louvain is fitted on the training graph only. The community bonus is tuned on validation data and evaluated on test data.
