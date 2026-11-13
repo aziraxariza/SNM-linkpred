@@ -1,7 +1,13 @@
 name: Full research experiments
 on:
   workflow_dispatch:
-  # Run manually after reviewing the config and dataset terms.
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "configs/**"
+      - "requirements.txt"
+      - ".github/workflows/experiments.yml"
 jobs:
   experiments:
     runs-on: ubuntu-latest
