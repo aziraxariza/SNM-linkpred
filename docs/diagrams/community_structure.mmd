@@ -1,0 +1,12 @@
+graph LR
+  subgraph Department_A
+    A1((A1)) --- A2((A2))
+    A2 --- A3((A3))
+    A1 --- A3
+  end
+  subgraph Department_B
+    B1((B1)) --- B2((B2))
+    B2 --- B3((B3))
+    B1 --- B3
+  end
+  A3 --- B1
