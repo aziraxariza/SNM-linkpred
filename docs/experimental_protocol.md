@@ -1,15 +1,25 @@
 # Experimental protocol
 
-## Dataset and graph representation
-Download the edge list and department labels from https://snap.stanford.edu/data/email-Eu-core.html. Keep the original directed graph for descriptive counts. The primary heuristic analysis uses an undirected simple projection: an undirected edge exists if either direction is present. Remove self-loops and collapse repeated ties.
+## Static Email-Eu-core task
+The SNAP Email-Eu-core edge list is directed and department labels assign each node to one of 42 departments. The primary heuristic task uses an undirected simple projection: an undirected tie exists if either direction was observed. Remove self-loops and collapse duplicate ties. Retain the directed graph for descriptive counts.
 
-## Splitting and leakage
-For each fixed seed, shuffle observed positive edges and partition them into train, validation and test sets. The training graph contains only training positives. Negative candidates must be absent from the **complete observed graph**, so a withheld positive edge is never sampled as a negative. Sample negatives separately for intra- and inter-department strata, at the configured ratio. Candidate sampling is without replacement.
+## Static split and leakage control
+For each fixed seed, shuffle the observed undirected positive edges and partition them into train, validation and test subsets. The training graph contains training positives only. Negative candidates must be absent from the complete observed graph, so a withheld positive is never sampled as a negative. Sample negatives separately for intra- and inter-department strata, without replacement, at the configured ratio. The run aborts if it cannot obtain the requested stratum count.
 
-Louvain is run on the training graph only. The community bonus parameter is selected on validation data and evaluated once on test data. Department-label-based community membership is an oracle analysis, since it relies on external labels.
+Louvain is run on the training graph only. Tune the community bonus on validation average precision, then evaluate once on the test subset. The bonus uses detected Louvain membership; supplied department labels are used to define evaluation strata and compare partitions, not as the predictor's input.
+
+## Temporal Email-Eu-core task
+The temporal dataset contains directed timestamped email events. Convert each event to an unordered dyad and retain the earliest timestamp for that dyad. This first-appearance representation prevents repeated emails on an already-existing dyad from being counted as new links. Sort unique dyads by first timestamp and split chronologically into train, validation and test periods. Fit Louvain on the training graph only.
+
+The temporal dataset's node identifiers do not match those of the static Email-Eu-core graph. Do not transfer department labels from the static dataset. Temporal strata are based on detected training communities.
+
+Temporal negatives are sampled from dyads absent from the complete observed temporal dataset. This closed-world definition is appropriate only for a retrospective benchmark and uses information from the full observation window to identify never-observed pairs. Report it explicitly; do not describe it as a live prospective negative sampler.
 
 ## Metrics
-Report ROC-AUC and average precision separately within each stratum. Report Precision@K on the sampled candidate population and include candidate counts and positive prevalence. Use repeated seeds and report mean, standard deviation and confidence intervals. Metrics are conditional on the candidate-sampling procedure.
+Report ROC-AUC, average precision and Precision@K for static runs, separately by intra-/inter-department stratum. Include positive/negative counts and candidate prevalence. Temporal output reports ROC-AUC and average precision for the full candidate set and detected-community strata. Report means, standard deviations and confidence intervals across static seeds. Do not compare average precision across strata without showing prevalence.
 
-## Interpretation
-The benchmark measures static missing-edge reconstruction. It does not show that a predicted edge will form in the future. Department labels may not match interaction-based communities. The undirected projection removes directionality. These limitations belong in the paper.
+## Reproducibility
+The seeds and split fractions are in `configs/default.json`. Keep raw data and generated output out of Git by default. Record data source, retrieval date, file checksum, software versions and configuration for a publication run. Use `pytest -q` before experiments.
+
+## Interpretation limits
+Static random edge holdout measures missing-edge reconstruction, not prediction of future edges. The temporal experiment measures first appearance of undirected dyads, not message volume or repeated interaction. The undirected projections discard direction. One organizational network cannot establish generality. Department labels and Louvain communities represent different notions of grouping.
