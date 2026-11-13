@@ -1,0 +1,8 @@
+graph LinkPrediction {
+  graph [label="Common-neighbour link prediction (conceptual)", labelloc=t, fontsize=18];
+  node [shape=circle, style=filled, fillcolor=lightblue];
+  A -- C; B -- C; A -- D; B -- D;
+  A [fillcolor=lightgoldenrod1]; B [fillcolor=lightgoldenrod1];
+  C; D;
+  A -- B [style=dashed, color=red, label="candidate pair"];
+}
