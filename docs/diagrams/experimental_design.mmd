@@ -1,0 +1,16 @@
+flowchart TD
+    A[SNAP Email-Eu-core] --> B[Parse directed email edges]
+    B --> C[Build undirected projection]
+    C --> D[Attach department labels]
+    D --> E[Network statistics]
+    E --> F[Seeded edge holdout]
+    F --> G[Training graph]
+    G --> H[Louvain community detection]
+    F --> I[Validation and test candidate pairs]
+    H --> J[CN / Jaccard / Adamic-Adar / Preferential Attachment]
+    I --> J
+    J --> K[Intra-department evaluation]
+    J --> L[Inter-department evaluation]
+    K --> M[Validation-tuned community bonus]
+    L --> M
+    M --> N[Held-out metrics, tables and figures]
