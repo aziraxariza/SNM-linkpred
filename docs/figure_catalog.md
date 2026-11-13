@@ -1,22 +1,27 @@
-# Figure catalog
+# Figure catalogue
 
-The experiment run generates descriptive, data-derived figures (not illustrative placeholders):
+The static pipeline generates data-derived figures after execution:
 
 1. Degree distribution
-2. Degree frequency on log-log axes
+2. Log-log degree frequency
 3. Degree complementary cumulative distribution
 4. Department size distribution
-5. Intra/inter edge counts across train, validation and test
+5. Intra-/inter-department edge counts across train, validation and test
 6. ROC-AUC distributions by method and stratum
-7. Average precision distributions by method and stratum
-8. Intra-community ROC analysis placeholder is deliberately not a fabricated curve
-9. Louvain/department NMI distribution
-10. Louvain modularity distribution
-11. Department-level average precision heatmap
-12. Department size versus average precision
-13. Validation-selected community bonus
-14. ROC-AUC mean and approximate confidence interval
-15. Mermaid methodology diagram source
-16. Graphviz link-prediction concept diagram source
+7. Average-precision distributions by method and stratum
+8. Precision@10 distributions
+9. Intra-department ROC curve
+10. Intra-department precision-recall curve
+11. Inter-department ROC curve
+12. Inter-department precision-recall curve
+13. Louvain/department NMI distribution
+14. Louvain modularity distribution
+15. Department-level average-precision heatmap
+16. Department size versus average precision
+17. Validation-selected community bonus
+18. ROC-AUC means with approximate 95% t intervals
+19. An illustrative induced subgraph of high-degree nodes coloured by department
+20. Mermaid methodology diagram source
+21. Graphviz common-neighbour prediction diagram source
 
-ROC and PR curve coordinates are not yet persisted by this initial pipeline. The figure labelled as a placeholder explicitly says so rather than drawing invented curves.
+Generated figures are stored in `paper/figures/`. The temporal pipeline writes `results/temporal_metrics.csv` and `results/temporal_summary.json`; temporal plotting can be added after reviewing those results. Do not create curves or tables by hand from expected outcomes.
