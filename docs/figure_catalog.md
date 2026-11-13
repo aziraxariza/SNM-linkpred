@@ -29,3 +29,5 @@ The static pipeline creates 20+ publication and explanatory assets after executi
 The pipeline also writes Mermaid and Graphviz source diagrams. Generated assets are saved in `paper/figures/`. Temporal outputs are `results/temporal_metrics.csv` and `results/temporal_summary.json`; no temporal plots are claimed by the current pipeline.
 
 All empirical plots are generated from run outputs. The conceptual diagrams are explicitly illustrative and must not be presented as measured network results.
+
+Temporal companion adds test-set ROC and precision-recall curves for the full temporal candidate set and detected-community strata (`21_temporal_roc_*.png`, `22_temporal_pr_*.png`). These are generated from saved temporal candidate scores.
