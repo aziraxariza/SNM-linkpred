@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 import numpy as np
 import pandas as pd
+from scipy.stats import wilcoxon
 
 from src.data import load_email_eu_core, describe
 from src.split import split_edges, sample_negatives, split_by_stratum
@@ -88,7 +89,8 @@ def main(config_file):
             for method, values in rows.items():
                 metric_rows.append({"rep": rep, "seed": seed, "stratum": stratum,
                                     "method": method, "n_positive": len(pos),
-                                    "n_negative": len(neg), **values})
+                                    "n_negative": len(neg),
+                                    "positive_prevalence": len(pos) / (len(pos) + len(neg)), **values})
                 base = scores[method]
                 for (u, v), yy, ss in zip(pairs, y, base):
                     prediction_rows.append({"rep": rep, "stratum": stratum, "method": method,
@@ -100,6 +102,7 @@ def main(config_file):
                 metric_rows.append({"rep": rep, "seed": seed, "stratum": stratum,
                                     "method": method + "_community_aware",
                                     "n_positive": len(pos), "n_negative": len(neg),
+                                    "positive_prevalence": len(pos) / (len(pos) + len(neg)),
                                     **community_values})
 
         # Community-wise within-department metrics; small/empty groups are omitted and recorded by absence.
@@ -134,8 +137,49 @@ def main(config_file):
     modularity.to_csv(results / "louvain_modularity.csv", index=False)
 
     summary = metrics.groupby(["method", "stratum"])[
-        ["roc_auc", "average_precision"]].agg(["mean", "std", "count"])
+        ["roc_auc", "average_precision", "precision_at_10"]].agg(["mean", "std", "count"])
     summary.to_csv(results / "metric_summary.csv")
+
+    # Paired per-seed comparison: detected-community adjustment vs baseline.
+    paired_rows = []
+    for base_method in METHODS:
+        for stratum in ("intra", "inter"):
+            base = metrics[(metrics.method == base_method) & (metrics.stratum == stratum)]
+            adjusted = metrics[(metrics.method == base_method + "_community_aware") &
+                               (metrics.stratum == stratum)]
+            merged = base.merge(adjusted, on=["rep", "seed", "stratum"],
+                                suffixes=("_base", "_community"))
+            for metric in ("roc_auc", "average_precision", "precision_at_10"):
+                a = merged[metric + "_community"].dropna()
+                b = merged.loc[a.index, metric + "_base"]
+                if len(a) < 2:
+                    continue
+                diff = (a - b).to_numpy()
+                if np.allclose(diff, 0):
+                    stat, pvalue = 0.0, 1.0
+                else:
+                    test = wilcoxon(a, b, alternative="two-sided", zero_method="wilcox")
+                    stat, pvalue = float(test.statistic), float(test.pvalue)
+                paired_rows.append({"method": base_method, "stratum": stratum,
+                                    "metric": metric, "n_pairs": len(a),
+                                    "baseline_mean": float(b.mean()),
+                                    "community_mean": float(a.mean()),
+                                    "mean_difference": float(diff.mean()),
+                                    "median_difference": float(np.median(diff)),
+                                    "wilcoxon_statistic": stat, "p_value": pvalue})
+    paired = pd.DataFrame(paired_rows)
+    if not paired.empty:
+        # Benjamini-Hochberg correction across the reported tests.
+        order = np.argsort(paired["p_value"].to_numpy())
+        pvals = paired["p_value"].to_numpy()
+        qvals = np.empty(len(pvals), dtype=float)
+        running = 1.0
+        for rank_idx in range(len(order) - 1, -1, -1):
+            original_idx = order[rank_idx]
+            running = min(running, pvals[original_idx] * len(pvals) / (rank_idx + 1))
+            qvals[original_idx] = min(1.0, running)
+        paired["p_value_bh"] = qvals
+    paired.to_csv(results / "paired_comparisons.csv", index=False)
     generate_all(graph, labels, metrics, communities, splits, nmi, modularity, tuning,
                  pd.DataFrame(prediction_rows), figures)
     print(f"Completed {len(nmi)} seeded repetitions.")
