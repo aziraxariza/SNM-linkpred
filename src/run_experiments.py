@@ -1,5 +1,8 @@
 import argparse
 import json
+import hashlib
+import platform
+from importlib.metadata import version, PackageNotFoundError
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -53,6 +56,35 @@ def main(config_file):
     figures.mkdir(parents=True, exist_ok=True)
     (results / "network_summary.json").write_text(
         json.dumps(describe(directed, graph, labels), indent=2), encoding="utf-8")
+
+    # Record exact input file checksums and package versions for reproducibility.
+    def sha256_file(path):
+        digest = hashlib.sha256()
+        with open(path, "rb") as stream:
+            for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+                digest.update(chunk)
+        return digest.hexdigest()
+
+    package_versions = {}
+    for package in ("networkx", "numpy", "pandas", "scikit-learn", "scipy",
+                    "matplotlib", "seaborn", "python-louvain"):
+        try:
+            package_versions[package] = version(package)
+        except PackageNotFoundError:
+            package_versions[package] = "not-installed"
+    raw = Path(cfg["raw_dir"])
+    metadata = {
+        "python_version": platform.python_version(),
+        "platform": platform.platform(),
+        "config": cfg,
+        "package_versions": package_versions,
+        "dataset_sha256": {
+            "email-Eu-core.txt.gz": sha256_file(raw / "email-Eu-core.txt.gz"),
+            "email-Eu-core-department-labels.txt.gz": sha256_file(raw / "email-Eu-core-department-labels.txt.gz")
+        }
+    }
+    (results / "run_metadata.json").write_text(
+        json.dumps(metadata, indent=2), encoding="utf-8")
 
     metric_rows, community_rows, split_rows, tuning_rows, prediction_rows = [], [], [], [], []
     nmi_rows, modularity_rows = [], []
