@@ -211,3 +211,80 @@ def generate_all(graph, labels, metrics, communities, splits, nmi, modularity,
  A -- B [style=dashed, color=red, label="candidate missing edge"];
 }
 """, encoding="utf-8")
+
+    # Render clean, labelled methodology flowchart.
+    from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
+    fig, ax = plt.subplots(figsize=(13, 7))
+    ax.set_xlim(0, 13); ax.set_ylim(0, 7); ax.axis("off")
+    boxes = [
+        (0.4, 5.2, 2.2, 1.0, "SNAP datasets", "Static + timestamped"),
+        (3.1, 5.2, 2.2, 1.0, "Preprocessing", "Deduplicate, label, project"),
+        (5.8, 5.2, 2.2, 1.0, "Split design", "Random holdout / chronological"),
+        (8.5, 5.2, 2.2, 1.0, "Training graph", "No validation/test edges"),
+        (8.5, 3.1, 2.2, 1.0, "Louvain", "Detected groups from train"),
+        (5.8, 3.1, 2.2, 1.0, "Link scores", "CN, Jaccard, AA, PA"),
+        (3.1, 3.1, 2.2, 1.0, "Validation", "Tune community bonus"),
+        (0.4, 3.1, 2.2, 1.0, "Test evaluation", "AUC, AP, Precision@K"),
+        (3.1, 0.8, 2.2, 1.0, "Analysis", "Paired tests + uncertainty"),
+        (6.0, 0.8, 2.2, 1.0, "Figures + tables", "CSV, PNG, diagram sources"),
+        (8.9, 0.8, 2.2, 1.0, "Manuscript", "Results only from outputs"),
+    ]
+    centers = {}
+    for x0, y0, w, h, title, sub in boxes:
+        patch = FancyBboxPatch((x0,y0),w,h,boxstyle="round,pad=0.08,rounding_size=0.12",
+                               facecolor="#edf3f8",edgecolor="#36566f",linewidth=1.4)
+        ax.add_patch(patch); centers[title]=(x0+w/2,y0+h/2)
+        ax.text(x0+w/2,y0+.64,title,ha="center",va="center",fontsize=10,weight="bold")
+        ax.text(x0+w/2,y0+.31,sub,ha="center",va="center",fontsize=7.7,wrap=True)
+    links=[("SNAP datasets","Preprocessing"),("Preprocessing","Split design"),
+           ("Split design","Training graph"),("Training graph","Louvain"),
+           ("Louvain","Link scores"),("Link scores","Validation"),
+           ("Validation","Test evaluation"),("Test evaluation","Analysis"),
+           ("Analysis","Figures + tables"),("Figures + tables","Manuscript")]
+    for a,b in links:
+        x1,y1=centers[a]; x2,y2=centers[b]
+        ax.add_patch(FancyArrowPatch((x1,y1),(x2,y2),arrowstyle="-|>",mutation_scale=13,
+                                     color="#526b7a",linewidth=1.3))
+    ax.set_title("Research workflow: static reconstruction and temporal first appearance",
+                 fontsize=14,weight="bold",pad=12)
+    save(fig,out,"18_methodology_pipeline.png")
+
+    # Common-neighbour explainer.
+    fig, ax = plt.subplots(figsize=(8,5))
+    pos={"A":(0,0),"B":(4,0),"C":(1.3,2),"D":(2.7,2)}
+    edges=[("A","C"),("B","C"),("A","D"),("B","D")]
+    demo=nx.Graph(edges)
+    nx.draw_networkx_edges(demo,pos,ax=ax,width=2,edge_color="#607d8b")
+    nx.draw_networkx_nodes(demo,pos,nodelist=["A","B"],node_color="#f4c66a",
+                           node_size=1100,ax=ax,edgecolors="#654d18")
+    nx.draw_networkx_nodes(demo,pos,nodelist=["C","D"],node_color="#9cc9df",
+                           node_size=850,ax=ax,edgecolors="#31576b")
+    nx.draw_networkx_labels(demo,pos,ax=ax,font_size=12,font_weight="bold")
+    ax.plot([0,4],[0,0],linestyle="--",color="#c0392b",linewidth=2)
+    ax.text(2,-.35,"candidate pair (A, B)",ha="center",color="#a52a2a",fontsize=10)
+    ax.text(2,2.55,"2 shared neighbours: CN(A,B) = 2",ha="center",fontsize=11)
+    ax.set_title("How common-neighbour link prediction works",fontsize=13,weight="bold")
+    ax.axis("off")
+    save(fig,out,"19_common_neighbour_explainer.png")
+
+    # Department-strata explainer.
+    fig, ax = plt.subplots(figsize=(9,5))
+    ax.set_xlim(0,10); ax.set_ylim(0,5); ax.axis("off")
+    for x0,title,color in [(0.5,"Department 1","#e5f1f7"),(6.0,"Department 2","#f8eee2")]:
+        ax.add_patch(FancyBboxPatch((x0,.7),3.5,3.5,boxstyle="round,pad=.12",
+                                    facecolor=color,edgecolor="#526b7a",linewidth=1.4))
+        ax.text(x0+1.75,3.9,title,ha="center",fontsize=11,weight="bold")
+    left=[(1.2,2.5),(2.1,1.6),(3.1,2.5)]
+    right=[(6.8,2.5),(7.8,1.6),(8.8,2.5)]
+    for group in (left,right):
+        for i in range(3):
+            for j in range(i+1,3):
+                ax.plot([group[i][0],group[j][0]],[group[i][1],group[j][1]],color="#8799a5",lw=1.3)
+        for x,y0 in group:
+            ax.scatter(x,y0,s=230,c="#6baed6",edgecolors="#31576b",zorder=3)
+    ax.plot([3.1,6.8],[2.5,2.5],linestyle="--",color="#c0392b",lw=2)
+    ax.text(5,2.85,"inter-department candidate",ha="center",color="#a52a2a",fontsize=9)
+    ax.text(2.25,.25,"intra-department pairs",ha="center",fontsize=9)
+    ax.text(7.75,.25,"intra-department pairs",ha="center",fontsize=9)
+    ax.set_title("Candidate-pair strata in the static experiment",fontsize=13,weight="bold")
+    save(fig,out,"20_department_strata_explainer.png")
