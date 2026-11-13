@@ -1,5 +1,8 @@
 """Chronological first-appearance experiment on SNAP Email-Eu-core-temporal."""
 import json
+import hashlib
+import platform
+from importlib.metadata import version, PackageNotFoundError
 from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -114,6 +117,14 @@ def main():
         "task": "chronological first-appearance prediction on undirected dyads",
         "negative_sampling": "equal-count random dyads absent from all observed events (closed-world)"
     }
+    temporal_file = Path(cfg["temporal_path"])
+    summary["python_version"] = platform.python_version()
+    summary["dataset_sha256"] = hashlib.sha256(temporal_file.read_bytes()).hexdigest()
+    try:
+        summary["networkx_version"] = version("networkx")
+        summary["python_louvain_version"] = version("python-louvain")
+    except PackageNotFoundError:
+        summary["package_versions"] = "not-installed"
     (out / "temporal_summary.json").write_text(json.dumps(summary, indent=2))
     print(json.dumps(summary, indent=2))
 
