@@ -1,0 +1,30 @@
+name: Full research experiments
+on:
+  workflow_dispatch:
+  # Run manually after reviewing the config and dataset terms.
+jobs:
+  experiments:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run unit tests
+        run: pytest -q
+      - name: Run static repeated-split experiments
+        run: python -m src.run_experiments --config configs/default.json
+      - name: Run temporal first-appearance experiments
+        run: python -m src.run_temporal
+      - name: Upload tables and figures
+        uses: actions/upload-artifact@v4
+        with:
+          name: snm-linkpred-experiment-results
+          path: |
+            results/
+            paper/figures/
+          if-no-files-found: error
