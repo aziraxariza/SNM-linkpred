@@ -23,15 +23,17 @@ def stratum(pair, labels):
 
 
 def sample_negatives(full_graph, labels, positives, ratio, seed, max_attempt_factor=100):
-    """Sample negatives by positive stratum; withheld observed edges are excluded."""
+    """Sample absent pairs by department stratum, excluding withheld positives."""
     rng = random.Random(seed)
     targets = {"intra": 0, "inter": 0}
-    for e in positives:
-        targets[stratum(e, labels)] += ratio
+    for edge in positives:
+        targets[stratum(edge, labels)] += ratio
     picked = {"intra": set(), "inter": set()}
     nodes = list(full_graph.nodes())
     remaining = sum(targets.values())
-    attempts, limit = 0, max(10000, remaining * max_attempt_factor)
+    attempts = 0
+    limit = max(10000, remaining * max_attempt_factor)
+
     while attempts < limit and any(len(picked[k]) < targets[k] for k in targets):
         u, v = rng.sample(nodes, 2)
         pair = tuple(sorted((u, v)))
@@ -41,11 +43,17 @@ def sample_negatives(full_graph, labels, positives, ratio, seed, max_attempt_fac
         kind = stratum(pair, labels)
         if len(picked[kind]) < targets[kind]:
             picked[kind].add(pair)
-    for kind in targets:\n        if len(picked[kind]) < targets[kind]:\n            raise RuntimeError(f"Could sample only {len(picked[kind])} of {targets[kind]} {kind} negatives")\n    return {k: sorted(v) for k, v in picked.items()}
+
+    for kind in targets:
+        if len(picked[kind]) < targets[kind]:
+            raise RuntimeError(
+                f"Could sample only {len(picked[kind])} of {targets[kind]} {kind} negatives"
+            )
+    return {kind: sorted(pairs) for kind, pairs in picked.items()}
 
 
 def split_by_stratum(edges, negatives, labels):
     return {
-        k: ([e for e in edges if stratum(e, labels) == k], negatives[k])
-        for k in ("intra", "inter")
+        kind: ([edge for edge in edges if stratum(edge, labels) == kind], negatives[kind])
+        for kind in ("intra", "inter")
     }
