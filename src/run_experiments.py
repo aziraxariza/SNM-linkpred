@@ -53,9 +53,8 @@ def main(config_file):
     (results / "network_summary.json").write_text(
         json.dumps(describe(directed, graph, labels), indent=2), encoding="utf-8")
 
-    metric_rows, community_rows, split_rows, tuning_rows = [], [], [], []
+    metric_rows, community_rows, split_rows, tuning_rows, prediction_rows = [], [], [], [], []
     nmi_rows, modularity_rows = [], []
-    roc_inputs, pr_inputs = {}, {}
 
     for rep, seed in enumerate(cfg["seeds"][:cfg["repetitions"]], start=1):
         train_graph, train_edges, val_edges, test_edges = split_edges(
@@ -91,6 +90,9 @@ def main(config_file):
                                     "method": method, "n_positive": len(pos),
                                     "n_negative": len(neg), **values})
                 base = scores[method]
+                for (u, v), yy, ss in zip(pairs, y, base):
+                    prediction_rows.append({"rep": rep, "stratum": stratum, "method": method,
+                                            "label": int(yy), "score": float(ss)})
                 lam = tuned[method]["lambda"]
                 adjusted = [s + (lam if partition.get(u) == partition.get(v) else 0.0)
                             for (u, v), s in zip(pairs, base)]
@@ -99,8 +101,6 @@ def main(config_file):
                                     "method": method + "_community_aware",
                                     "n_positive": len(pos), "n_negative": len(neg),
                                     **community_values})
-                roc_inputs.setdefault((method, stratum), []).append((y, base))
-                pr_inputs.setdefault((method, stratum), []).append((y, base))
 
         # Community-wise within-department metrics; small/empty groups are omitted and recorded by absence.
         pos, neg = test_groups["intra"]
@@ -129,13 +129,15 @@ def main(config_file):
     communities.to_csv(results / "community_metrics_by_run.csv", index=False)
     splits.to_csv(results / "split_stratum_counts.csv", index=False)
     tuning.to_csv(results / "validation_tuning.csv", index=False)
+    pd.DataFrame(prediction_rows).to_csv(results / "test_prediction_scores.csv", index=False)
     nmi.to_csv(results / "louvain_nmi.csv", index=False)
     modularity.to_csv(results / "louvain_modularity.csv", index=False)
 
     summary = metrics.groupby(["method", "stratum"])[
         ["roc_auc", "average_precision"]].agg(["mean", "std", "count"])
     summary.to_csv(results / "metric_summary.csv")
-    generate_all(graph, labels, metrics, communities, splits, nmi, modularity, tuning, figures)
+    generate_all(graph, labels, metrics, communities, splits, nmi, modularity, tuning,
+                 pd.DataFrame(prediction_rows), figures)
     print(f"Completed {len(nmi)} seeded repetitions.")
     print(f"Tables: {results.resolve()}")
     print(f"Figures: {figures.resolve()}")
