@@ -1,0 +1,107 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{times,graphicx,booktabs,amsmath,amssymb,url,hyperref,caption,float,enumitem}
+\usepackage[numbers,sort&compress]{natbib}
+\graphicspath{{figures/}}
+\hypersetup{colorlinks=true,allcolors=blue}
+\title{Influence of Community Structure on Link Prediction: A Community-Stratified Evaluation of Structural Similarity Methods in Organizational Networks}
+\author{Ariza Wasim\\Social Network Mining}
+\date{\today}
+\begin{document}
+\maketitle
+\begin{abstract}
+Link prediction estimates missing connections from an observed network. Classical methods use local structural signals, but their performance may vary with community organization. This study proposes a reproducible community-stratified evaluation on the SNAP Email-Eu-core organizational communication network. Common Neighbors, Jaccard Coefficient, Adamic--Adar and Preferential Attachment are evaluated separately for candidate pairs within the same department and across departments. The study also compares departmental labels with Louvain communities and tests a validation-tuned community-membership bonus. The task is defined as static missing-edge reconstruction, not temporal forecasting. Empirical findings are intentionally withheld until the pipeline has been executed.
+\end{abstract}
+\noindent\textbf{Keywords:} link prediction; community structure; social network analysis; graph mining; email networks.
+
+\section{Introduction}
+Social networks can be represented as graphs in which nodes denote entities and edges denote observed relationships. Many real networks contain groups with denser internal connectivity than external connectivity. Such groups are commonly described as communities. Community structure has been studied in social, biological and information networks \citep{girvan2002community,newman2004finding,fortunato2010community}.
+
+Link prediction asks whether an unconnected pair of nodes is likely to have a missing or future edge. Liben-Nowell and Kleinberg established a systematic framework for link prediction in social networks \citep{liben2007link}. Local methods use shared neighbours, neighbourhood overlap and node degree. Adamic and Adar proposed a weighted shared-neighbour measure that discounts highly connected common neighbours \citep{adamic2003friends}.
+
+Community structure may affect these scores. Nodes in the same community can share neighbours because they participate in related local interaction patterns. Pairs from different communities may have fewer shared neighbours, even when a connection exists. A network-wide score can therefore conceal differences across candidate-link types.
+
+This study evaluates four classical heuristics on the SNAP Email-Eu-core dataset. Department labels provide a basis for separating intra-department and inter-department candidate pairs. The experiments also compare those labels with communities detected from the training graph and test a community-aware score.
+
+\subsection{Research questions}
+\begin{enumerate}[label=RQ\arabic*:]
+\item Does prediction performance differ between intra-community and inter-community candidate pairs?
+\item Do the four heuristics behave differently across these strata?
+\item Are community size and internal density associated with prediction difficulty?
+\item Does a community-membership term improve prediction ranking?
+\item How closely do Louvain communities agree with departmental labels?
+\end{enumerate}
+
+\section{Related Work}
+\subsection{Complex networks and community structure}
+The small-world model of Watts and Strogatz showed that high clustering can coexist with short characteristic path lengths \citep{watts1998collective}. Barab\'asi and Albert described scale-free degree distributions arising through preferential attachment \citep{barabasi1999emergence}. Girvan and Newman introduced a divisive approach to identifying community structure, while subsequent work developed modularity-based evaluation \citep{girvan2002community,newman2004finding,newman2006modularity}. Fortunato reviewed definitions, algorithms and limitations of community detection \citep{fortunato2010community}.
+
+\subsection{Link prediction}
+Adamic and Adar proposed a weighted common-neighbour score \citep{adamic2003friends}. Liben-Nowell and Kleinberg evaluated link prediction methods in social networks \citep{liben2007link}. Later work surveyed local, quasi-local and global approaches \citep{lu2011survey}. This study uses four interpretable structural baselines to inspect stratum-level differences.
+
+\subsection{Ground-truth communities and representation learning}
+Benchmark work has examined community detection methods on networks with known structure \citep{lancichinetti2008benchmark,yang2012groundtruth}. DeepWalk, node2vec and graph neural networks provide representation-learning approaches relevant to future extensions \citep{perozzi2014deepwalk,grover2016node2vec,zhang2018seal}.
+
+\subsection{Research focus}
+The study is a focused organizational-network evaluation. It does not claim to introduce the baseline heuristics. Its contribution is the controlled separation of candidate pairs by departmental membership, comparison with detected communities, and evaluation of a validation-tuned community bonus.
+
+\section{Dataset and Preprocessing}
+The SNAP Email-Eu-core dataset contains anonymized email communications from a European research institution. Nodes represent employees and directed edges represent email communication. A separate file provides departmental labels. The dataset is available from SNAP \citep{snapemail}.
+
+The source graph is directed. For the primary experiments, an undirected simple projection is used: an edge is retained if at least one direction was observed. Self-loops are removed and repeated ties collapse to one edge. The directed graph is retained for descriptive counts. This modelling choice removes direction information.
+
+\section{Methodology}
+Let $G=(V,E)$ be the observed undirected graph and let $C(v)$ denote the supplied department label of node $v$. A pair $(u,v)$ is intra-community when $C(u)=C(v)$ and inter-community otherwise.
+
+\subsection{Link prediction scores}
+Let $\Gamma(u)$ denote the neighbour set of $u$. The four methods are:
+\begin{align}
+CN(u,v)&=|\Gamma(u)\cap\Gamma(v)|,\\
+J(u,v)&=\frac{|\Gamma(u)\cap\Gamma(v)|}{|\Gamma(u)\cup\Gamma(v)|},\\
+AA(u,v)&=\sum_{w\in\Gamma(u)\cap\Gamma(v)}\frac{1}{\log d(w)},\\
+PA(u,v)&=d(u)d(v).
+\end{align}
+The Adamic--Adar contribution is defined for common neighbours with degree greater than one.
+
+\subsection{Community detection}
+Louvain community detection is applied to each training graph. Agreement with departmental labels is measured using normalized mutual information (NMI), and modularity is reported for the detected partition. Test edges are excluded from community detection.
+
+\subsection{Edge split and negative sampling}
+Observed positive edges are divided into training, validation and test sets using fixed random seeds. Negative candidates are pairs absent from the complete observed graph, preventing withheld observed edges from being mislabeled as negatives. Negative pairs are sampled separately for intra- and inter-department strata. The sampling ratio and candidate counts are recorded. This is static missing-edge reconstruction, not temporal forecasting.
+
+\subsection{Community-aware score}
+For a baseline score $S(u,v)$, the community-aware score is
+\begin{equation}
+S_c(u,v)=S(u,v)+\lambda\mathbb{I}[C(u)=C(v)],
+\end{equation}
+where $\lambda$ is selected on validation data. A detected-community variant uses the Louvain partition. A supplied-label variant is an oracle analysis because it uses external metadata.
+
+\subsection{Evaluation}
+ROC-AUC, average precision and Precision@$K$ are computed. ROC-AUC and average precision are reported separately within intra- and inter-community candidate populations. Results are repeated over multiple seeds. Confidence intervals and paired tests should be added when run-level observations are available.
+
+\section{Results}
+\textbf{Pending execution.} This section must be completed from generated CSV files. No performance values or empirical conclusions are asserted in this scaffold.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.8\linewidth]{01_degree_distribution.png}
+\caption{Degree distribution of the undirected Email-Eu-core projection.}
+\end{figure}
+\begin{figure}[H]
+\centering
+\includegraphics[width=.8\linewidth]{06_roc_auc_boxplots.png}
+\caption{ROC-AUC by heuristic and candidate-link stratum.}
+\end{figure}
+
+\section{Discussion}
+The final discussion should interpret differences between intra- and inter-community candidate pairs, assess ranking stability across repeated splits, and distinguish structural effects from sampling effects. Claims about community-aware improvements must be supported by held-out test results after parameter selection on validation data.
+
+\section{Limitations}
+The analysis uses one organizational email network. The undirected projection removes communication direction, and static edge holdout measures missing-edge reconstruction rather than temporal forecasting. Results depend on negative sampling and the availability and quality of departmental labels.
+
+\section{Conclusion}
+This study provides a reproducible framework for evaluating classical link prediction heuristics across intra- and inter-community candidate pairs. The pipeline compares supplied departmental groups with detected communities and evaluates a simple community-aware score. Conclusions will be added after experiments are complete.
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+\end{document}
