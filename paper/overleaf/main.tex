@@ -106,7 +106,7 @@ python -m src.run_temporal
 Unit tests are run with \texttt{pytest -q}. Raw data and generated results are not committed by default. The repository includes the data catalogue, literature list, experimental protocol, source code, tests, and figure-generation scripts.
 
 \section{Results}
-\textbf{This section must be populated from a completed experiment run.} The code exports per-run test metrics, negative-candidate counts, validation-selected community bonuses, NMI, modularity, temporal metrics, and figure files. Do not enter numerical values here until the corresponding CSV files have been generated and checked.
+\textbf{This section must be populated from a completed experiment run.} The code exports per-run test metrics, candidate prevalence, negative-candidate counts, validation-selected community bonuses, paired Wilcoxon comparisons with false-discovery-rate adjusted values, NMI, modularity, temporal metrics, and figure files. Do not enter numerical values here until the corresponding CSV files have been generated and checked.
 
 \begin{figure}[H]\centering
 \includegraphics[width=.78\linewidth]{01_degree_distribution.png}
@@ -127,8 +127,23 @@ Unit tests are run with \texttt{pytest -q}. Raw data and generated results are n
 \includegraphics[width=.78\linewidth]{10_intra_precision_recall.png}
 \caption{Precision-recall curves for intra-department candidates.}\end{figure}
 \begin{figure}[H]\centering
-\includegraphics[width=.78\linewidth]{17_network_sample.png}
+\includegraphics[width=.78\linewidth]{10_inter_precision_recall.png}
+\caption{Precision-recall curves for inter-department candidates.}\end{figure}
+\begin{figure}[H]\centering
+\includegraphics[width=.88\linewidth]{13_community_heatmap.png}
+\caption{Average precision by department and baseline heuristic.}\end{figure}
+\begin{figure}[H]\centering
+\includegraphics[width=.88\linewidth]{17_network_sample.png}
 \caption{Illustrative induced subgraph of high-degree nodes, coloured by department.}\end{figure}
+\begin{figure}[H]\centering
+\includegraphics[width=.95\linewidth]{18_methodology_pipeline.png}
+\caption{End-to-end experimental workflow.}\end{figure}
+\begin{figure}[H]\centering
+\includegraphics[width=.72\linewidth]{19_common_neighbour_explainer.png}
+\caption{Common-neighbour score illustrated on a small graph.}\end{figure}
+\begin{figure}[H]\centering
+\includegraphics[width=.82\linewidth]{20_department_strata_explainer.png}
+\caption{Intra- and inter-department candidate-pair strata.}\end{figure}
 
 \section{Discussion}
 The discussion must answer each research question using the generated test tables. In particular, compare intra- and inter-department metrics without treating a higher average precision as directly comparable when candidate prevalence differs. Report candidate counts and prevalence alongside ranking metrics. A community-aware score should be described as useful only if its test performance improves over its matched baseline across repeated splits; a validation improvement alone is insufficient.
