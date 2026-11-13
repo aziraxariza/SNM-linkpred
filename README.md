@@ -4,7 +4,7 @@ Reproducible static and temporal experiments on link prediction in organizationa
 
 ## Research questions
 - Does link prediction differ for intra- and inter-department candidate pairs?
-- How do How do Common Neighbors, Jaccard, Adamic-Adar, Preferential Attachment, Resource Allocation and LHN compare?
+- How do Common Neighbors, Jaccard, Adamic-Adar, Preferential Attachment, Resource Allocation and LHN compare?
 - How closely do Louvain communities match the supplied department labels?
 - Does a validation-tuned detected-community bonus improve held-out ranking?
 - Do patterns persist under chronological first-appearance prediction?
