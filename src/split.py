@@ -41,7 +41,7 @@ def sample_negatives(full_graph, labels, positives, ratio, seed, max_attempt_fac
         kind = stratum(pair, labels)
         if len(picked[kind]) < targets[kind]:
             picked[kind].add(pair)
-    return {k: sorted(v) for k, v in picked.items()}
+    for kind in targets:\n        if len(picked[kind]) < targets[kind]:\n            raise RuntimeError(f"Could sample only {len(picked[kind])} of {targets[kind]} {kind} negatives")\n    return {k: sorted(v) for k, v in picked.items()}
 
 
 def split_by_stratum(edges, negatives, labels):
